@@ -1,12 +1,7 @@
 import asyncio
-
-from langchain import hub
-from langchain.agents import (AgentExecutor, AgentType, create_react_agent,
-                              initialize_agent)
-
+from xagent import XAgentClient, XAgentModel, XAgentAgentExecutor  # Hypothetical XAgent imports
 from agents.base_agent import BaseAgent
 from agents.conversational.output_parser import ConvoOutputParser
-from agents.conversational.streaming_aiter import AsyncCallbackHandler
 from agents.handle_agent_errors import handle_agent_error
 from config import Config
 from memory.zep.zep_memory import ZepMemory
@@ -57,38 +52,22 @@ class ConversationalAgent(BaseAgent):
                 configs = agent_with_configs.configs
                 prompt = speech_to_text(voice_url, configs, voice_settings)
 
-            llm = get_llm(
-                settings,
-                agent_with_configs,
+            # Replace with XAgent’s model configuration
+            llm = XAgentModel(temperature=0.5, model_name="xagent-model-v1")
+
+            # Replace Langchain agent configuration with XAgent’s configuration
+            agent = XAgentClient(
+                model=llm,
+                tools=tools,
+                config={
+                    "system_message": system_message,
+                    "output_parser": ConvoOutputParser(),  # Hypothetical parser for XAgent
+                },
+                max_iterations=5,
             )
 
-            streaming_handler = AsyncCallbackHandler()
-
-            llm.streaming = True
-            # llm.callbacks = [
-            #     run_logs_manager.get_agent_callback_handler(),
-            #     streaming_handler,
-            # ]
-
-            # agent = initialize_agent(
-            #     tools,
-            #     llm,
-            #     agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-            #     verbose=True,
-            #     memory=memory,
-            #     handle_parsing_errors="Check your output and make sure it conforms!",
-            #     agent_kwargs={
-            #         "system_message": system_message,
-            #         "output_parser": ConvoOutputParser(),
-            #     },
-            #     callbacks=[run_logs_manager.get_agent_callback_handler()],
-            # )
-
-            agentPrompt = hub.pull("hwchase17/react")
-
-            agent = create_react_agent(llm, tools, prompt=agentPrompt)
-
-            agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+            # Agent execution, assuming XAgent has an equivalent `AgentExecutor`
+            agent_executor = XAgentAgentExecutor(agent=agent, tools=tools, verbose=True)
 
             chunks = []
             final_answer_detected = False
