@@ -1,6 +1,5 @@
-from langchain.smith import RunEvalConfig, run_on_dataset
-from langchain_community.chat_models import ChatOpenAI
-from langsmith import Client
+# Importing XAgent components (hypothetical imports based on typical agent frameworks)
+from xagent import XAgentClient, XAgentEvalConfig, XAgentModel
 
 # TODO: refactor test to use new auth
 
@@ -17,48 +16,38 @@ from langsmith import Client
 #     "x-refresh-token": auth_data["refresh_token"],
 # }
 
-
 def agent_factory():
-    # llm = ChatOpenAI(temperature=0, model_name="gpt-3.5-turbo")
-    # tools = get_tools(["SerpGoogleSearch"])
+    # Set up XAgent’s language model
+    llm = XAgentModel(temperature=0.5, model_name="xagent-model-v1")
 
-    # return initialize_agent(
-    #     tools,
-    #     llm,
-    #     agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-    #     verbose=True,
-    #     handle_parsing_errors="Check your output and make sure it conforms!",
-    #     agent_kwargs={
-    #         # "prefix": system_message,
-    #         "system_message": system_message,
-    #         # "format_instructions": FORMAT_INSTRUCTIONS,
-    #         "output_parser": ConvoOutputParser(),
-    #     },
-    #     max_iterations=5,
-    # )
-    pass
+    # Initialize XAgent with necessary configuration
+    # Assuming XAgent has a similar conversational agent setup
+    return XAgentClient(
+        model=llm,
+        tools=["GoogleSearchTool"],  # Replace with XAgent's toolset if available
+        config={
+            "system_message": "Provide conversational responses in a helpful manner.",
+            "output_parser": "simple_parser",  # Example parser based on XAgent’s expected parsers
+        },
+        max_iterations=5,
+    )
 
-
+# Instantiate agent
 agent = agent_factory()
 
-client = Client()
+# Instantiate client - using XAgent’s client instead of Langchain's Client
+client = XAgentClient()
 
-
-eval_config = RunEvalConfig(
+# Set up XAgent evaluation configuration
+eval_config = XAgentEvalConfig(
     evaluators=[
         "qa",
-        RunEvalConfig.Criteria("helpfulness"),
-        RunEvalConfig.Criteria("conciseness"),
+        XAgentEvalConfig.Criteria("helpfulness"),
+        XAgentEvalConfig.Criteria("conciseness"),
     ],
     input_key="input",
-    eval_llm=ChatOpenAI(temperature=0.5, model_name="gpt-3.5-turbo"),
+    eval_model=XAgentModel(temperature=0.5, model_name="xagent-eval-model"),
 )
 
-chain_results = run_on_dataset(
-    client,
-    dataset_name="test-dataset",
-    llm_or_chain_factory=agent_factory,
-    evaluation=eval_config,
-    concurrency_level=1,
-    verbose=True,
-)
+# Run evaluation on the dataset
+chain_results
