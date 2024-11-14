@@ -1,9 +1,6 @@
 from typing import List, Optional
 
-from langchain.agents import AgentType, initialize_agent
-from langchain.schema import AIMessage, SystemMessage
-from langchain_community.chat_models import ChatOpenAI
-
+from xagent import XAgentClient, XAgentModel  # Hypothetical XAgent imports
 from agents.agent_simulations.agent.dialogue_agent import DialogueAgent
 from agents.conversational.output_parser import ConvoOutputParser
 from config import Config
@@ -17,8 +14,8 @@ class DialogueAgentWithTools(DialogueAgent):
         self,
         name: str,
         agent_with_configs: AgentWithConfigsOutput,
-        system_message: SystemMessage,
-        model: ChatOpenAI,
+        system_message: str,  # Updated to string as XAgent likely does not use SystemMessage directly
+        model: XAgentModel,  # Hypothetical XAgent model class
         tools: List[any],
         session_id: str,
         sender_name: str,
@@ -65,22 +62,21 @@ class DialogueAgentWithTools(DialogueAgent):
             self.model.callbacks = [self.run_logs_manager.get_agent_callback_handler()]
             callbacks.append(self.run_logs_manager.get_agent_callback_handler())
 
-        agent = initialize_agent(
-            self.tools,
-            self.model,
-            agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
-            verbose=True,
-            handle_parsing_errors=True,
-            memory=memory,
-            callbacks=callbacks,
-            agent_kwargs={
-                "system_message": self.system_message.content,
-                "output_parser": ConvoOutputParser(),
+        # Initialize XAgent client and set up the agent with tools and model
+        agent = XAgentClient(
+            model=self.model,
+            tools=self.tools,
+            config={
+                "system_message": self.system_message,  # Assume system_message is now a string
+                "output_parser": ConvoOutputParser(),  # Hypothetical parser for XAgent
             },
+            max_iterations=5,
         )
 
+        # Construct the input prompt
         prompt = "\n".join(self.message_history + [self.prefix])
 
+        # Execute the agent with the prompt
         res = agent.run(input=prompt)
 
         # FIXME: is memory
